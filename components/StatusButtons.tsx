@@ -54,7 +54,7 @@ export default function StatusButtons({
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <div className="flex items-center">
+      <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
         {FLOW.map((f, i) => {
           const done = i <= currentIdx;
           const isCurrent = f.status === current;
@@ -78,7 +78,7 @@ export default function StatusButtons({
               </div>
               {i < FLOW.length - 1 && (
                 <span
-                  className={`w-6 h-px mx-2 ${i < currentIdx ? "bg-emerald-400" : "bg-slate-200"}`}
+                  className={`hidden sm:block w-6 h-px mx-2 ${i < currentIdx ? "bg-emerald-400" : "bg-slate-200"}`}
                 />
               )}
             </div>
