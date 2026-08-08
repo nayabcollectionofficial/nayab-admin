@@ -99,8 +99,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             : "No orders yet — they will appear here as soon as customers place them."}
         </div>
       ) : (
-        <div className="mt-8 bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="mt-8 bg-white border border-slate-200 rounded-xl overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100">
                 <th className="px-5 py-3 font-medium">Ref</th>

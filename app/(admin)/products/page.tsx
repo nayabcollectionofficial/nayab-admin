@@ -43,8 +43,8 @@ export default async function ProductsPage() {
           No products yet — click “Add Product” to create your first one.
         </div>
       ) : (
-        <div className="mt-8 bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="mt-8 bg-white border border-slate-200 rounded-xl overflow-x-auto">
+          <table className="w-full text-sm min-w-[560px]">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100">
                 <th className="px-5 py-3 font-medium">Product</th>

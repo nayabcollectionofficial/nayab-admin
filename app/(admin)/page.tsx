@@ -98,43 +98,45 @@ export default async function DashboardPage() {
             them.
           </p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                <th className="px-5 py-3 font-medium">Ref</th>
-                <th className="px-5 py-3 font-medium">Customer</th>
-                <th className="px-5 py-3 font-medium">Total</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {recent.map((o) => (
-                <tr key={o.ref}>
-                  <td className="px-5 py-3.5 font-medium text-slate-900">
-                    {o.ref}
-                  </td>
-                  <td className="px-5 py-3.5 text-slate-600">
-                    {o.customer_name}
-                    <span className="text-slate-400"> · {o.customer_city}</span>
-                  </td>
-                  <td className="px-5 py-3.5 text-slate-900">
-                    {formatPrice(o.total)}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusBadge[o.status] ?? "bg-slate-100 text-slate-600"}`}
-                    >
-                      {o.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-slate-400">
-                    {new Date(o.created_at).toLocaleDateString()}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[480px]">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                  <th className="px-5 py-3 font-medium">Ref</th>
+                  <th className="px-5 py-3 font-medium">Customer</th>
+                  <th className="px-5 py-3 font-medium">Total</th>
+                  <th className="px-5 py-3 font-medium">Status</th>
+                  <th className="px-5 py-3 font-medium">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {recent.map((o) => (
+                  <tr key={o.ref}>
+                    <td className="px-5 py-3.5 font-medium text-slate-900">
+                      {o.ref}
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-600">
+                      {o.customer_name}
+                      <span className="text-slate-400"> · {o.customer_city}</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-900">
+                      {formatPrice(o.total)}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusBadge[o.status] ?? "bg-slate-100 text-slate-600"}`}
+                      >
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-400">
+                      {new Date(o.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
