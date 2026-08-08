@@ -184,17 +184,33 @@ export default function ProductForm({
                 Brand *
               </label>
               <input
-                list="brands"
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
                 placeholder="e.g. Bin Naem"
                 className={inputCls}
               />
-              <datalist id="brands">
-                {existingBrands.map((b) => (
-                  <option key={b} value={b} />
-                ))}
-              </datalist>
+              {existingBrands.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {existingBrands.map((b) => (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => setBrand(b)}
+                      className={
+                        "text-xs px-2.5 py-1 rounded-full border transition-colors " +
+                        (brand === b
+                          ? "bg-slate-900 text-white border-slate-900"
+                          : "bg-white text-slate-600 border-slate-300 hover:border-slate-500")
+                      }
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="mt-1.5 text-xs text-slate-400">
+                Nayi brand add karni ho to bas naam type kar do — save hone par apne aap ban jayegi.
+              </p>
             </div>
 
             <div>
