@@ -64,7 +64,10 @@ export default async function SettingsPage() {
         Payment accounts, delivery and contact details — save karte hi store
         pe live
       </p>
-      <SettingsForm initial={settings} />
+      <SettingsForm
+        key={JSON.stringify(settings)}
+        initial={settings}
+      />
     </div>
   );
 }

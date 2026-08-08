@@ -34,6 +34,9 @@ const labelCls =
 export default function SettingsForm({ initial }: { initial: SettingsData }) {
   const router = useRouter();
   const [form, setForm] = useState<SettingsData>(initial);
+  const [groupTexts, setGroupTexts] = useState<string[]>(
+    () => initial.brandGroups.map((g) => g.brands.join(", "))
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +46,10 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
     const t = setTimeout(() => setSaved(false), 2500);
     return () => clearTimeout(t);
   }, [saved]);
+
+  function setGroupText(index: number, text: string) {
+    setGroupTexts((prev) => prev.map((t, i) => (i === index ? text : t)));
+  }
 
   function setMethod(id: string, field: keyof PaymentMethod, value: string) {
     setForm((f) => ({
@@ -68,6 +75,7 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
         { id: `group-${Date.now()}`, label: "New Filter", brands: [] },
       ],
     }));
+    setGroupTexts((prev) => [...prev, ""]);
   }
 
   function removeGroup(index: number) {
@@ -75,12 +83,20 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
       ...f,
       brandGroups: f.brandGroups.filter((_, i) => i !== index),
     }));
+    setGroupTexts((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSaving(true);
+    const brandGroups = form.brandGroups.map((g, i) => ({
+      ...g,
+      brands: (groupTexts[i] ?? "")
+        .split(",")
+        .map((b) => b.trim())
+        .filter(Boolean),
+    }));
     try {
       const res = await fetch("/api/settings", {
         method: "PUT",
@@ -90,7 +106,7 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
           delivery: form.delivery,
           supportPhone: form.supportPhone,
           adminEmail: form.adminEmail,
-          brandGroups: form.brandGroups,
+          brandGroups,
         }),
       });
       const data = await res.json();
@@ -259,15 +275,16 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
                     Brands Is Filter Ke Andar (comma se alag)
                   </label>
                   <input
-                    value={g.brands.join(", ")}
-                    onChange={(e) =>
-                      setGroup(index, {
-                        brands: e.target.value.split(",").map((b) => b.trim()).filter(Boolean),
-                      })
-                    }
+                    value={groupTexts[index] ?? ""}
+                    onChange={(e) => setGroupText(index, e.target.value)}
                     placeholder="Khaali = baqi sab brands yahan aayenge (catch-all)"
                     className={inputCls}
                   />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Two ya zyada companies: shuru se type karo, saath me comma
+                    (,) do — agar shuru me koi purana naam tha to phle wala
+                    hata do
+                  </p>
                 </div>
                 <button
                   type="button"
