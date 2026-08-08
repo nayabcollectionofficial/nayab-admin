@@ -67,8 +67,8 @@ export default async function SettingsPage() {
     <div>
       <h1 className="text-2xl font-semibold text-slate-900">Settings</h1>
       <p className="text-sm text-slate-500 mt-1">
-        Payment accounts, delivery and contact details — save karte hi store
-        pe live
+        Payment accounts, contact details aur store settings — save karte hi
+        store pe live
       </p>
       <SettingsForm
         key={JSON.stringify(settings)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { AdminProduct } from "@/lib/products";
@@ -17,6 +17,9 @@ export default function ProductForm({
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const aspectMap = useRef(new Map<string, number>());
+  const newUploads = useRef<string[]>([]);
+  const imagesRef = useRef<string[]>(initial?.images ?? []);
 
   const [name, setName] = useState(initial?.name ?? "");
   const [brand, setBrand] = useState(initial?.brand ?? "");
@@ -44,6 +47,25 @@ export default function ProductForm({
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+  useEffect(() => {
+    imagesRef.current = images;
+  });
+
+  function fireCleanup() {
+    const pending = newUploads.current.filter((u) => !imagesRef.current.includes(u));
+    if (pending.length === 0) return;
+    newUploads.current = [];
+    fetch("/api/upload/cleanup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ urls: pending }),
+    }).catch(() => {});
+  }
+
+  useEffect(() => {
+    return fireCleanup;
+  }, []);
+
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     setError(null);
@@ -58,26 +80,23 @@ export default function ProductForm({
       return;
     }
 
-    // Aspect ratio pehli (main) image se — gallery sahi dikhegi
     let detectedAspect: number | null = null;
-    if (images.length === 0) {
-      try {
-        detectedAspect = await new Promise<number | null>((resolve) => {
-          const url = URL.createObjectURL(file);
-          const img = new globalThis.Image();
-          img.onload = () => {
-            resolve(Number((img.naturalWidth / img.naturalHeight).toFixed(3)));
-            URL.revokeObjectURL(url);
-          };
-          img.onerror = () => {
-            resolve(null);
-            URL.revokeObjectURL(url);
-          };
-          img.src = url;
-        });
-      } catch {
-        detectedAspect = null;
-      }
+    try {
+      detectedAspect = await new Promise<number | null>((resolve) => {
+        const url = URL.createObjectURL(file);
+        const img = new globalThis.Image();
+        img.onload = () => {
+          resolve(Number((img.naturalWidth / img.naturalHeight).toFixed(3)));
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => {
+          resolve(null);
+          URL.revokeObjectURL(url);
+        };
+        img.src = url;
+      });
+    } catch {
+      detectedAspect = null;
     }
 
     const reader = new FileReader();
@@ -94,8 +113,12 @@ export default function ProductForm({
           setError(data.error ?? "Upload failed.");
           return;
         }
+        if (detectedAspect) aspectMap.current.set(data.url, detectedAspect);
+        if (imagesRef.current.length === 0 && detectedAspect) {
+          setAspect(detectedAspect);
+        }
         setImages((prev) => [...prev, data.url]);
-        if (detectedAspect) setAspect(detectedAspect);
+        newUploads.current.push(data.url);
       } catch {
         setError("Upload failed. Please try again.");
       } finally {
@@ -106,7 +129,13 @@ export default function ProductForm({
   }
 
   function removeImage(url: string) {
-    setImages((prev) => prev.filter((u) => u !== url));
+    const idx = imagesRef.current.indexOf(url);
+    const remaining = imagesRef.current.filter((u) => u !== url);
+    setImages(remaining);
+    if (idx === 0) {
+      const nextMain = remaining[0];
+      setAspect(nextMain ? (aspectMap.current.get(nextMain) ?? null) : null);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -145,6 +174,7 @@ export default function ProductForm({
         setSaving(false);
         return;
       }
+      newUploads.current = [];
       router.push("/products");
       router.refresh();
     } catch {
@@ -400,7 +430,10 @@ export default function ProductForm({
             type="file"
             accept="image/png,image/jpeg,image/webp"
             className="hidden"
-            onChange={(e) => handleFiles(e.target.files)}
+            onChange={(e) => {
+              handleFiles(e.target.files);
+              e.target.value = "";
+            }}
           />
 
           {aspect && (
@@ -430,7 +463,10 @@ export default function ProductForm({
           </button>
           <button
             type="button"
-            onClick={() => router.push("/products")}
+            onClick={() => {
+              fireCleanup();
+              router.push("/products");
+            }}
             className="px-4 py-2.5 text-sm text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors"
           >
             Cancel

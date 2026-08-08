@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { supabase, hasDb } from "@/lib/supabase";
 import { requireSession } from "@/lib/session";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatDateTime } from "@/lib/format";
 
 export const metadata = { title: "Orders" };
 
@@ -14,7 +14,7 @@ export const statusBadge: Record<string, string> = {
 };
 
 interface OrdersPageProps {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
 }
 
 interface OrderRow {
@@ -27,6 +27,8 @@ interface OrderRow {
   created_at: string;
 }
 
+const PER_PAGE = 50;
+
 const METHODS: Record<string, string> = {
   easypaisa: "EasyPaisa",
   jazzcash: "JazzCash",
@@ -34,9 +36,16 @@ const METHODS: Record<string, string> = {
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   await requireSession();
-  const { status, q } = await searchParams;
+  const sp = await searchParams;
+  const status = sp.status;
+  const q = sp.q?.trim() ?? "";
+  const page = Math.max(1, Math.min(1000, Number(sp.page) || 1));
+  const offset = (page - 1) * PER_PAGE;
 
   let orders: OrderRow[] = [];
+  let total = 0;
+  const counts = { pending: 0, confirmed: 0, dispatched: 0, delivered: 0, cancelled: 0 };
+
   if (hasDb && supabase) {
     let query = supabase
       .from("orders")
@@ -49,15 +58,27 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         `ref.ilike.${needle},customer_name.ilike.${needle},customer_phone.ilike.${needle}`
       );
     }
-    const { data, error } = await query.limit(200);
-    if (!error && data) orders = data as OrderRow[];
+    const { data } = await query.range(offset, offset + PER_PAGE - 1);
+    if (data) orders = data as OrderRow[];
+
+    const [{ count: all }, ...statusCounts] = await Promise.all([
+      supabase.from("orders").select("id", { count: "exact", head: true }),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "confirmed"),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "dispatched"),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "delivered"),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "cancelled"),
+    ]);
+    total = all ?? 0;
+    counts.pending = statusCounts[0].count ?? 0;
+    counts.confirmed = statusCounts[1].count ?? 0;
+    counts.dispatched = statusCounts[2].count ?? 0;
+    counts.delivered = statusCounts[3].count ?? 0;
+    counts.cancelled = statusCounts[4].count ?? 0;
   }
 
-  const counts = { pending: 0, confirmed: 0, dispatched: 0, delivered: 0, cancelled: 0 };
-  for (const o of orders) counts[o.status as keyof typeof counts]++;
-
   const tabs = [
-    { key: undefined, label: "All" },
+    { key: undefined, label: `All (${total})` },
     { key: "pending", label: `Pending (${counts.pending})` },
     { key: "confirmed", label: `Confirmed (${counts.confirmed})` },
     { key: "dispatched", label: `Dispatched (${counts.dispatched})` },
@@ -65,15 +86,34 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     { key: "cancelled", label: `Cancelled (${counts.cancelled})` },
   ];
 
+  const hasMore = orders.length === PER_PAGE;
+  const pageParams = (p: number) => {
+    const sp2 = new URLSearchParams();
+    if (status) sp2.set("status", status);
+    if (q) sp2.set("q", q);
+    sp2.set("page", String(p));
+    return `/orders?${sp2.toString()}`;
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900">Orders</h1>
       <p className="text-sm text-slate-500 mt-1">
-        {orders.length} order{orders.length === 1 ? "" : "s"} — review payment
-        proofs and update status
+        {total} order{total === 1 ? "" : "s"} — review payment proofs and
+        update status
       </p>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <form method="get" className="mt-6 max-w-sm">
+        <input
+          type="search"
+          name="q"
+          defaultValue={q}
+          placeholder="Search by ref, name or phone…"
+          className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+        />
+      </form>
+
+      <div className="mt-4 flex flex-wrap gap-2">
         {tabs.map((t) => {
           const active = (status ?? undefined) === t.key;
           return (
@@ -123,11 +163,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     </Link>
                   </td>
                   <td className="px-5 py-3.5 text-slate-500">
-                    {new Date(o.created_at).toLocaleDateString()}{" "}
-                    {new Date(o.created_at).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatDateTime(o.created_at)}
                   </td>
                   <td className="px-5 py-3.5 text-slate-600">
                     {o.customer_name}
@@ -150,6 +186,31 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {(hasMore || page > 1) && (
+        <div className="mt-6 flex items-center gap-4">
+          {page > 1 && (
+            <Link
+              href={pageParams(page - 1)}
+              className="text-sm text-slate-600 border border-slate-200 rounded-lg px-4 py-2 hover:bg-white transition-colors"
+            >
+              ← Newer
+            </Link>
+          )}
+          <span className="text-sm text-slate-400">
+            Page {page}
+            {hasMore ? " — older orders neeche" : ""}
+          </span>
+          {hasMore && (
+            <Link
+              href={pageParams(page + 1)}
+              className="text-sm bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-4 py-2 transition-colors"
+            >
+              Older orders →
+            </Link>
+          )}
         </div>
       )}
     </div>

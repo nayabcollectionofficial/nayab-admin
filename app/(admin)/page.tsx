@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { supabase, hasDb } from "@/lib/supabase";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatDate } from "@/lib/format";
 import { requireSession } from "@/lib/session";
 
 const statusBadge: Record<string, string> = {
@@ -113,7 +114,9 @@ export default async function DashboardPage() {
                 {recent.map((o) => (
                   <tr key={o.ref}>
                     <td className="px-5 py-3.5 font-medium text-slate-900">
-                      {o.ref}
+                      <Link href={`/orders/${encodeURIComponent(o.ref)}`} className="hover:text-slate-600">
+                        {o.ref}
+                      </Link>
                     </td>
                     <td className="px-5 py-3.5 text-slate-600">
                       {o.customer_name}
@@ -130,7 +133,7 @@ export default async function DashboardPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-slate-400">
-                      {new Date(o.created_at).toLocaleDateString()}
+                      {formatDate(o.created_at)}
                     </td>
                   </tr>
                 ))}

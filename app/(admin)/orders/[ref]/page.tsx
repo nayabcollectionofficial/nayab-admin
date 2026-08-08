@@ -1,8 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase, hasDb, storageSignedUrl } from "@/lib/supabase";
 import { requireSession } from "@/lib/session";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatDateTime } from "@/lib/format";
 import { statusBadge } from "@/app/(admin)/orders/page";
 import StatusButtons from "@/components/StatusButtons";
 
@@ -64,18 +65,19 @@ export default async function OrderDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-5xl">
+      <Link
+        href="/orders"
+        className="inline-block text-sm text-slate-500 hover:text-slate-900 mb-4"
+      >
+        ← Back to orders
+      </Link>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
             Order {orderRef}
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Placed on{" "}
-            {new Date(order.created_at).toLocaleDateString()}{" "}
-            {new Date(order.created_at).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            Placed on {formatDateTime(order.created_at)}
           </p>
         </div>
         <span

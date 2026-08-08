@@ -8,22 +8,32 @@ import DeleteProductButton from "@/components/DeleteProductButton";
 
 export const metadata = { title: "Products" };
 
-export default async function ProductsPage() {
+interface ProductsPageProps {
+  searchParams: Promise<{ q?: string }>;
+}
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   await requireSession();
+  const q = (await searchParams).q?.trim() ?? "";
 
   let products: AdminProduct[] = [];
   if (hasDb && supabase) {
-    const { data, error } = await supabase
+    let query = supabase
       .from("products")
       .select("*")
       .order("featured", { ascending: false })
       .order("name", { ascending: true });
+    if (q) {
+      const needle = `%${q.toLowerCase()}%`;
+      query = query.or(`name.ilike.${needle},brand.ilike.${needle}`);
+    }
+    const { data, error } = await query.limit(500);
     if (!error && data) products = data as AdminProduct[];
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Products</h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -37,6 +47,16 @@ export default async function ProductsPage() {
           + Add Product
         </Link>
       </div>
+
+      <form method="get" className="mt-6 max-w-sm">
+        <input
+          type="search"
+          name="q"
+          defaultValue={q}
+          placeholder="Search by name or brand…"
+          className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+        />
+      </form>
 
       {products.length === 0 ? (
         <div className="mt-8 bg-white border border-slate-200 rounded-xl px-5 py-16 text-center text-sm text-slate-400">
@@ -91,15 +111,19 @@ export default async function ProductsPage() {
                     )}
                   </td>
                   <td className="px-5 py-3">
-                    <span
-                      className={
-                        p.stock < 10
-                          ? "text-amber-600 font-medium"
-                          : "text-slate-600"
-                      }
-                    >
-                      {p.stock}
-                    </span>
+                    {p.stock <= 0 ? (
+                      <span className="text-red-600 font-medium">Out of stock</span>
+                    ) : (
+                      <span
+                        className={
+                          p.stock < 10
+                            ? "text-amber-600 font-medium"
+                            : "text-slate-600"
+                        }
+                      >
+                        {p.stock}
+                      </span>
+                    )}
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex flex-wrap gap-1.5">
