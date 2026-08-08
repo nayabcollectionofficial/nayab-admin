@@ -29,6 +29,11 @@ const DEFAULTS = {
   delivery: { fee: 300, freeThreshold: 15000 },
   supportPhone: "0309 8599816",
   adminEmail: "",
+  brandGroups: [
+    { id: "bin-naem", label: "Bin Naem", brands: ["Bin Naem"] },
+    { id: "bin-saeed", label: "Bin Saeed", brands: ["Bin Saeed"] },
+    { id: "other", label: "Other", brands: [] },
+  ],
 };
 
 export default async function SettingsPage() {
@@ -47,6 +52,8 @@ export default async function SettingsPage() {
         settings.supportPhone = row.value;
       if (row.key === "adminEmail" && typeof row.value === "string")
         settings.adminEmail = row.value;
+      if (row.key === "brandGroups" && Array.isArray(row.value))
+        settings.brandGroups = row.value as typeof DEFAULTS.brandGroups;
     }
   }
 

@@ -11,11 +11,18 @@ interface PaymentMethod {
   note: string;
 }
 
+interface BrandGroup {
+  id: string;
+  label: string;
+  brands: string[];
+}
+
 interface SettingsData {
   paymentMethods: PaymentMethod[];
   delivery: { fee: number; freeThreshold: number };
   supportPhone: string;
   adminEmail: string;
+  brandGroups: BrandGroup[];
 }
 
 const inputCls =
@@ -46,6 +53,30 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
     }));
   }
 
+  function setGroup(index: number, patch: Partial<BrandGroup>) {
+    setForm((f) => ({
+      ...f,
+      brandGroups: f.brandGroups.map((g, i) => (i === index ? { ...g, ...patch } : g)),
+    }));
+  }
+
+  function addGroup() {
+    setForm((f) => ({
+      ...f,
+      brandGroups: [
+        ...f.brandGroups,
+        { id: `group-${Date.now()}`, label: "New Filter", brands: [] },
+      ],
+    }));
+  }
+
+  function removeGroup(index: number) {
+    setForm((f) => ({
+      ...f,
+      brandGroups: f.brandGroups.filter((_, i) => i !== index),
+    }));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -59,6 +90,7 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
           delivery: form.delivery,
           supportPhone: form.supportPhone,
           adminEmail: form.adminEmail,
+          brandGroups: form.brandGroups,
         }),
       });
       const data = await res.json();
@@ -199,6 +231,61 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
               className={inputCls}
             />
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h2 className="font-medium text-slate-900">Brand Filters (Shop)</h2>
+        <p className="text-xs text-slate-400 mt-1">
+          Customer ko sirf yeh labels dikhte hain — real brand names kahin nahi
+          dikhte. Khali brands wala group automatic baqi sab brands ke liye
+          hota hai (e.g. &quot;Other&quot;). Kaunsi brands kis filter ke andar, aap
+          decide karo — add / remove / edit anytime.
+        </p>
+        <div className="mt-5 space-y-4">
+          {form.brandGroups.map((g, index) => (
+            <div key={g.id} className="border border-slate-200 rounded-lg p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr_auto] gap-4 items-start">
+                <div>
+                  <label className={labelCls}>Filter Label (public)</label>
+                  <input
+                    value={g.label}
+                    onChange={(e) => setGroup(index, { label: e.target.value })}
+                    placeholder="e.g. Other"                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>
+                    Brands Is Filter Ke Andar (comma se alag)
+                  </label>
+                  <input
+                    value={g.brands.join(", ")}
+                    onChange={(e) =>
+                      setGroup(index, {
+                        brands: e.target.value.split(",").map((b) => b.trim()).filter(Boolean),
+                      })
+                    }
+                    placeholder="Khaali = baqi sab brands yahan aayenge (catch-all)"
+                    className={inputCls}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeGroup(index)}
+                  className="mt-6 text-xs text-red-600 hover:text-red-700 underline underline-offset-4"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addGroup}
+            className="text-sm text-slate-700 border border-dashed border-slate-300 rounded-lg px-4 py-2.5 hover:border-slate-500 transition-colors"
+          >
+            + Add Filter
+          </button>
         </div>
       </div>
 

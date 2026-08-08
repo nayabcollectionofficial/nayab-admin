@@ -10,6 +10,30 @@ interface PaymentMethodInput {
   note?: unknown;
 }
 
+interface BrandGroupInput {
+  id?: unknown;
+  label?: unknown;
+  brands?: unknown;
+}
+
+function cleanBrandGroup(g: BrandGroupInput, index: number, usedIds: Set<string>): { id: string; label: string; brands: string[] } | null {
+  const label = typeof g.label === "string" ? g.label.trim() : "";
+  if (!label) return null;
+  const rawBrands = Array.isArray(g.brands)
+    ? g.brands.filter((b): b is string => typeof b === "string").map((b) => b.trim()).filter(Boolean)
+    : [];
+  const base = typeof g.id === "string" && /^[a-z0-9-]+$/.test(g.id) ? g.id : "";
+  let id = base || slugifyLabel(label);
+  let n = 1;
+  while (usedIds.has(id)) id = `${slugifyLabel(label)}-${n++}`;
+  usedIds.add(id);
+  return { id, label, brands: [...new Set(rawBrands)] };
+}
+
+function slugifyLabel(label: string): string {
+  return label.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `group-${Date.now()}`;
+}
+
 function cleanPaymentMethod(m: PaymentMethodInput) {
   return {
     id: typeof m.id === "string" ? m.id : "",
@@ -60,12 +84,24 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Order email is required (empty allowed for none)." }, { status: 400 });
   }
 
+  let brandGroups: { id: string; label: string; brands: string[] }[] | null = null;
+  if (Array.isArray(body.brandGroups)) {
+    const usedIds = new Set<string>();
+    brandGroups = (body.brandGroups as BrandGroupInput[])
+      .map((g, i) => cleanBrandGroup(g, i, usedIds))
+      .filter((g): g is { id: string; label: string; brands: string[] } => g !== null);
+    if (brandGroups.length === 0) {
+      return NextResponse.json({ error: "At least one brand filter is required." }, { status: 400 });
+    }
+  }
+
   const entries: { key: string; value: unknown }[] = [
     { key: "paymentMethods", value: methods },
     { key: "delivery", value: { fee: Math.round(fee), freeThreshold: Math.round(freeThreshold) } },
     { key: "supportPhone", value: supportPhone },
     { key: "adminEmail", value: adminEmail },
   ];
+  if (brandGroups) entries.push({ key: "brandGroups", value: brandGroups });
 
   for (const entry of entries) {
     const { error } = await supabase.from("settings").upsert(
