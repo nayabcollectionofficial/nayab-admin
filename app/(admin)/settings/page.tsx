@@ -26,7 +26,6 @@ const DEFAULTS = {
       note: "Pay the total amount via JazzCash app, then upload your payment screenshot below.",
     },
   ],
-  delivery: { fee: 300, freeThreshold: 15000 },
   supportPhone: "0309 8599816",
   adminEmail: "",
   brandGroups: [
@@ -48,8 +47,6 @@ export default async function SettingsPage() {
     for (const row of rows) {
       if (row.key === "paymentMethods" && Array.isArray(row.value))
         settings.paymentMethods = row.value as typeof DEFAULTS.paymentMethods;
-      if (row.key === "delivery" && row.value)
-        settings.delivery = { ...settings.delivery, ...(row.value as object) } as typeof DEFAULTS.delivery;
       if (row.key === "supportPhone" && typeof row.value === "string")
         settings.supportPhone = row.value;
       if (row.key === "adminEmail" && typeof row.value === "string")

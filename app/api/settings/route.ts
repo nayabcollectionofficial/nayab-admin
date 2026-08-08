@@ -57,7 +57,6 @@ export async function PUT(request: Request) {
   const methods = Array.isArray(body.paymentMethods)
     ? (body.paymentMethods as PaymentMethodInput[]).map(cleanPaymentMethod)
     : null;
-  const deliveryRaw = body.delivery as { fee?: unknown; freeThreshold?: unknown } | null;
   const supportPhone = typeof body.supportPhone === "string" ? body.supportPhone.trim() : null;
   const adminEmail = typeof body.adminEmail === "string" ? body.adminEmail.trim() : null;
 
@@ -66,15 +65,6 @@ export async function PUT(request: Request) {
   }
   if (methods.some((m) => !m.id || !m.label || !m.mobileAccount || !m.accountTitle)) {
     return NextResponse.json({ error: "Payment accounts need a name, number and account title." }, { status: 400 });
-  }
-
-  const fee = Number(deliveryRaw?.fee);
-  const freeThreshold = Number(deliveryRaw?.freeThreshold);
-  if (!Number.isFinite(fee) || fee < 0) {
-    return NextResponse.json({ error: "Delivery fee must be a positive number." }, { status: 400 });
-  }
-  if (!Number.isFinite(freeThreshold) || freeThreshold <= 0) {
-    return NextResponse.json({ error: "Free delivery threshold must be a positive number." }, { status: 400 });
   }
 
   if (supportPhone === null) {
@@ -97,7 +87,6 @@ export async function PUT(request: Request) {
 
   const entries: { key: string; value: unknown }[] = [
     { key: "paymentMethods", value: methods },
-    { key: "delivery", value: { fee: Math.round(fee), freeThreshold: Math.round(freeThreshold) } },
     { key: "supportPhone", value: supportPhone },
     { key: "adminEmail", value: adminEmail },
   ];

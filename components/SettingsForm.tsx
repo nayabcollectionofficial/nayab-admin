@@ -19,7 +19,6 @@ interface BrandGroup {
 
 interface SettingsData {
   paymentMethods: PaymentMethod[];
-  delivery: { fee: number; freeThreshold: number };
   supportPhone: string;
   adminEmail: string;
   brandGroups: BrandGroup[];
@@ -110,7 +109,6 @@ export default function SettingsForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           paymentMethods: form.paymentMethods,
-          delivery: form.delivery,
           supportPhone: form.supportPhone,
           adminEmail: form.adminEmail,
           brandGroups,
@@ -187,45 +185,6 @@ export default function SettingsForm({
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <h2 className="font-medium text-slate-900">Delivery</h2>
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
-          <div>
-            <label className={labelCls}>Delivery Fee (Rs.)</label>
-            <input
-              type="number"
-              min="0"
-              value={form.delivery.fee}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  delivery: { ...f.delivery, fee: Number(e.target.value) },
-                }))
-              }
-              className={inputCls}
-            />
-          </div>
-          <div>
-            <label className={labelCls}>Free Delivery Above (Rs.)</label>
-            <input
-              type="number"
-              min="1"
-              value={form.delivery.freeThreshold}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  delivery: {
-                    ...f.delivery,
-                    freeThreshold: Number(e.target.value),
-                  },
-                }))
-              }
-              className={inputCls}
-            />
-          </div>
         </div>
       </div>
 
