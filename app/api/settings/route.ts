@@ -102,6 +102,12 @@ export async function PUT(request: Request) {
     { key: "adminEmail", value: adminEmail },
   ];
   if (brandGroups) entries.push({ key: "brandGroups", value: brandGroups });
+  entries.push({
+    key: "spotlightProductSlug",
+    value: typeof body.spotlightProductSlug === "string" && body.spotlightProductSlug.trim()
+      ? body.spotlightProductSlug.trim()
+      : null,
+  });
 
   for (const entry of entries) {
     const { error } = await supabase.from("settings").upsert(

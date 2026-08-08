@@ -23,6 +23,7 @@ interface SettingsData {
   supportPhone: string;
   adminEmail: string;
   brandGroups: BrandGroup[];
+  spotlightProductSlug: string | null;
 }
 
 const inputCls =
@@ -31,7 +32,13 @@ const inputCls =
 const labelCls =
   "block text-xs font-medium uppercase tracking-wider text-slate-500 mb-1.5";
 
-export default function SettingsForm({ initial }: { initial: SettingsData }) {
+export default function SettingsForm({
+  initial,
+  products,
+}: {
+  initial: SettingsData;
+  products: { id: string; name: string; slug: string }[];
+}) {
   const router = useRouter();
   const [form, setForm] = useState<SettingsData>(initial);
   const [groupTexts, setGroupTexts] = useState<string[]>(
@@ -107,6 +114,7 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
           supportPhone: form.supportPhone,
           adminEmail: form.adminEmail,
           brandGroups,
+          spotlightProductSlug: form.spotlightProductSlug,
         }),
       });
       const data = await res.json();
@@ -247,6 +255,38 @@ export default function SettingsForm({ initial }: { initial: SettingsData }) {
               className={inputCls}
             />
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h2 className="font-medium text-slate-900">Homepage Spotlight</h2>
+        <p className="text-xs text-slate-400 mt-1">
+          Homepage ke top pe jo suit dikhta hai — choose karo kaunsa product
+          ho. &quot;Auto&quot; pe featured product dikhta hai.
+        </p>
+        <div className="mt-4 max-w-md">
+          <label className={labelCls}>Spotlight Product</label>
+          <select
+            value={form.spotlightProductSlug ?? ""}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                spotlightProductSlug: e.target.value || null,
+              }))
+            }
+            className={inputCls}
+          >
+            <option value="">Auto — Featured product</option>
+            {products.map((p) => (
+              <option key={p.id} value={p.slug}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-[11px] text-slate-400 mt-1">
+            Product delete ho jaye to homepage auto featured pe wapas chala
+            jata hai — kabhi blank nahi hota
+          </p>
         </div>
       </div>
 

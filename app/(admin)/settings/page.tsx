@@ -34,12 +34,14 @@ const DEFAULTS = {
     { id: "bin-saeed", label: "Bin Saeed", brands: ["Bin Saeed"] },
     { id: "other", label: "Other", brands: [] },
   ],
+  spotlightProductSlug: null as string | null,
 };
 
 export default async function SettingsPage() {
   await requireSession();
 
   const settings = { ...DEFAULTS };
+  let products: { id: string; name: string; slug: string }[] = [];
   if (hasDb && supabase) {
     const { data } = await supabase.from("settings").select("key,value");
     const rows = (data ?? []) as SettingRow[];
@@ -54,7 +56,14 @@ export default async function SettingsPage() {
         settings.adminEmail = row.value;
       if (row.key === "brandGroups" && Array.isArray(row.value))
         settings.brandGroups = row.value as typeof DEFAULTS.brandGroups;
+      if (row.key === "spotlightProductSlug" && (typeof row.value === "string" || row.value === null))
+        settings.spotlightProductSlug = row.value;
     }
+    const prodRes = await supabase
+      .from("products")
+      .select("id,name,slug")
+      .order("name", { ascending: true });
+    products = (prodRes.data ?? []) as typeof products;
   }
 
   return (
@@ -67,6 +76,7 @@ export default async function SettingsPage() {
       <SettingsForm
         key={JSON.stringify(settings)}
         initial={settings}
+        products={products}
       />
     </div>
   );
