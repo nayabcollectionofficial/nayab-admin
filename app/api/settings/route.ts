@@ -104,9 +104,7 @@ export async function PUT(request: Request) {
   if (brandGroups) entries.push({ key: "brandGroups", value: brandGroups });
   entries.push({
     key: "spotlightProductSlug",
-    value: typeof body.spotlightProductSlug === "string" && body.spotlightProductSlug.trim()
-      ? body.spotlightProductSlug.trim()
-      : null,
+    value: typeof body.spotlightProductSlug === "string" ? body.spotlightProductSlug.trim() : "",
   });
 
   for (const entry of entries) {

@@ -23,7 +23,7 @@ interface SettingsData {
   supportPhone: string;
   adminEmail: string;
   brandGroups: BrandGroup[];
-  spotlightProductSlug: string | null;
+  spotlightProductSlug: string;
 }
 
 const inputCls =
@@ -271,7 +271,7 @@ export default function SettingsForm({
             onChange={(e) =>
               setForm((f) => ({
                 ...f,
-                spotlightProductSlug: e.target.value || null,
+                spotlightProductSlug: e.target.value,
               }))
             }
             className={inputCls}

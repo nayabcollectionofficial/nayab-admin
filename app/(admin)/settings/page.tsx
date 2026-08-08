@@ -34,7 +34,7 @@ const DEFAULTS = {
     { id: "bin-saeed", label: "Bin Saeed", brands: ["Bin Saeed"] },
     { id: "other", label: "Other", brands: [] },
   ],
-  spotlightProductSlug: null as string | null,
+  spotlightProductSlug: "",
 };
 
 export default async function SettingsPage() {
@@ -56,7 +56,7 @@ export default async function SettingsPage() {
         settings.adminEmail = row.value;
       if (row.key === "brandGroups" && Array.isArray(row.value))
         settings.brandGroups = row.value as typeof DEFAULTS.brandGroups;
-      if (row.key === "spotlightProductSlug" && (typeof row.value === "string" || row.value === null))
+      if (row.key === "spotlightProductSlug" && typeof row.value === "string")
         settings.spotlightProductSlug = row.value;
     }
     const prodRes = await supabase
