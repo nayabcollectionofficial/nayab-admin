@@ -144,11 +144,11 @@ export default async function OrderDetailPage({ params }: Props) {
             </ul>
             <dl className="mt-4 pt-4 border-t border-slate-100 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-slate-400">Subtotal</dt>
+                <dt className="text-slate-400">Product Total</dt>
                 <dd>{formatPrice(order.subtotal)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-slate-400">Delivery (at doorstep)</dt>
+                <dt className="text-slate-400">Delivery (paid via wallet)</dt>
                 <dd>{formatPrice(order.delivery)}</dd>
               </div>
               <div className="flex justify-between text-base font-semibold">

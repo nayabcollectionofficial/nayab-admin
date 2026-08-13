@@ -147,7 +147,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 <th className="px-5 py-3 font-medium">Date</th>
                 <th className="px-5 py-3 font-medium">Customer</th>
                 <th className="px-5 py-3 font-medium">Method</th>
-                <th className="px-5 py-3 font-medium">Total</th>
+                <th className="px-5 py-3 font-medium">Paid Upfront</th>
                 <th className="px-5 py-3 font-medium">Status</th>
               </tr>
             </thead>
