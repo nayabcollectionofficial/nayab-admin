@@ -148,13 +148,11 @@ export default async function OrderDetailPage({ params }: Props) {
                 <dd>{formatPrice(order.subtotal)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-slate-400">Delivery</dt>
-                <dd>
-                  {order.delivery === 0 ? "Free" : formatPrice(order.delivery)}
-                </dd>
+                <dt className="text-slate-400">Delivery (at doorstep)</dt>
+                <dd>{formatPrice(order.delivery)}</dd>
               </div>
               <div className="flex justify-between text-base font-semibold">
-                <dt>Total Paid</dt>
+                <dt>Paid Upfront</dt>
                 <dd>{formatPrice(order.total)}</dd>
               </div>
             </dl>
